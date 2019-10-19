@@ -6,17 +6,24 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.service.autofill.UserData;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -29,6 +36,8 @@ import org.w3c.dom.Text;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -47,44 +56,88 @@ public class MainActivity extends AppCompatActivity {
     AlertDialog.Builder builder;
     AlertDialog dialog;
 
+    private FloatingActionButton fab_main, fab1_mail, fab2_share;
+    private Animation fab_open, fab_close, fab_clock, fab_anticlock;
+    TextView textview_mail, textview_share;
 
-
+    Boolean isOpen = false;
+    boolean ascending = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // let's make this activity on full screen
-
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
 
-        // hide the action bar
-
         getSupportActionBar().hide();
 
 
-        // ini view
+        fab_main = findViewById(R.id.fab);
+        fab1_mail = findViewById(R.id.fab1);
+        fab2_share = findViewById(R.id.fab2);
+        fab_close = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_close);
+        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
+        fab_clock = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_rotate_clock);
+        fab_anticlock = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_rotate_atilock);
 
-        fabSwitcher = findViewById(R.id.fa_add);
+
+        fab_main.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (isOpen) {
+
+
+                    fab2_share.startAnimation(fab_close);
+                    fab1_mail.startAnimation(fab_close);
+                    fab_main.startAnimation(fab_anticlock);
+                    fab2_share.setClickable(false);
+                    fab1_mail.setClickable(false);
+                    isOpen = false;
+                } else {
+
+                    fab2_share.startAnimation(fab_open);
+                    fab1_mail.startAnimation(fab_open);
+                    fab_main.startAnimation(fab_clock);
+                    fab2_share.setClickable(true);
+                    fab1_mail.setClickable(true);
+                    isOpen = true;
+                }
+
+            }
+        });
+
+
+        fab1_mail.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sortData(ascending);
+                ascending =!ascending;
+                fab2_share.startAnimation(fab_close);
+                fab1_mail.startAnimation(fab_close);
+                fab_main.startAnimation(fab_anticlock);
+                fab2_share.setClickable(false);
+                fab1_mail.setClickable(false);
+                isOpen = false;
+            }
+        });
+
+
+
         rootLayout = findViewById(R.id.root_layout);
         searchInput = findViewById(R.id.search_input);
         NewsRecyclerview = findViewById(R.id.news_rv);
         mData = new ArrayList<>();
 
-        // load theme state
-
-//        isDark = getThemeStatePref();
         if (isDark) {
-            // dark theme is on
 
             searchInput.setBackgroundResource(R.drawable.search_input_dark_style);
             rootLayout.setBackgroundColor(getResources().getColor(R.color.black));
 
         } else {
-            // light theme is on
             searchInput.setBackgroundResource(R.drawable.search_input_style);
             rootLayout.setBackgroundColor(getResources().getColor(R.color.white));
 
@@ -95,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
         NewsRecyclerview.setLayoutManager(new LinearLayoutManager(this));
 
 
-        fabSwitcher.setOnClickListener(new View.OnClickListener() {
+        fab2_share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 builder = new AlertDialog.Builder(MainActivity.this);
@@ -113,22 +166,22 @@ public class MainActivity extends AppCompatActivity {
                 Button btnAdd = view.findViewById(R.id.btn_add);
                 Button btnCancel = view.findViewById(R.id.btn_cancel);
                 Date currentTime = Calendar.getInstance().getTime();
-                final SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+                final SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy '\n' HH:mm:ss");
                 final String formattedDate = df.format(currentTime);
-
                 btnAdd.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if(TextUtils.isEmpty(name)){
-                            edtName.setError("The item name cannot be empty");
-                        }
-                        if(TextUtils.isEmpty(content)){
-                            edtContent.setError("The item content cannot be empty");
-                        }
-                        else{
+
                         int k = random.nextInt(photos.length);
                         name = edtName.getText().toString();
                         content = edtContent.getText().toString();
+                        if(TextUtils.isEmpty(name)){
+                            edtName.setError("Not null");
+                        }
+                        if(TextUtils.isEmpty(content)){
+                            edtContent.setError("Not null");
+                        }
+                        else{
                         NewsItem newsItem = new NewsItem();
                         newsItem.setTitle(name);
                         newsItem.setContent(content);
@@ -136,16 +189,29 @@ public class MainActivity extends AppCompatActivity {
                         newsItem.setUserPhoto(photos[k]);
                         mData.add(newsItem);
                         newsAdapter.notifyDataSetChanged();
-                        edtName.setText("");
-                        edtContent.setText("");
-                        dialog.dismiss();}
+                        dialog.dismiss();
+                        fab2_share.startAnimation(fab_close);
+                        fab1_mail.startAnimation(fab_close);
+                        fab_main.startAnimation(fab_anticlock);
+                        fab2_share.setClickable(false);
+                        fab1_mail.setClickable(false);
+                        isOpen = false;
+                        }
 
                     }
+
+
                 });
                 btnCancel.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         dialog.dismiss();
+                        fab2_share.startAnimation(fab_close);
+                        fab1_mail.startAnimation(fab_close);
+                        fab_main.startAnimation(fab_anticlock);
+                        fab2_share.setClickable(false);
+                        fab1_mail.setClickable(false);
+                        isOpen = false;
                     }
                 });
             }
@@ -163,7 +229,51 @@ public class MainActivity extends AppCompatActivity {
                 dialog.show();
             }
         });
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+
+                newsAdapter.getFilter().filter(s);
+                search = s;
+
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
+    private void sortData(boolean asc)
+    {
+        //SORT ARRAY ASCENDING AND DESCENDING
+        if (asc)
+        {
+            Collections.sort(mData, new Comparator<NewsItem>() {
+                @Override
+                public int compare(NewsItem o1, NewsItem o2) {
+                    return o1.getTitle().compareTo(o2.getTitle());
+                }
+            });
+        }
+        else
+        {
+            Collections.reverse(mData);
+        }
+
+        //ADAPTER
+        newsAdapter = new NewsAdapter(this, mData);
+        NewsRecyclerview.setAdapter(newsAdapter);
+
+    }
+
     private void InitUpdateDialog(final int position, View view) {
         final TextView txtName = view.findViewById(R.id.et_name);
         final TextView txtContent = view.findViewById(R.id.et_content);
@@ -200,48 +310,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            if ( v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                    v.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
+        }
+        return super.dispatchTouchEvent( event );
+    }
 }
 
 
-//        searchInput.addTextChangedListener(new TextWatcher() {
-//                    @Override
-//                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//                    }
-//
-//                    @Override
-//                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-//
-//
-//                        newsAdapter.getFilter().filter(s);
-//                        search = s;
-//
-//
-//                    }
-//
-//                    @Override
-//                    public void afterTextChanged(Editable s) {
-//
-//                    }
-//                });
-//
-//
-//            }
-//
-//            private void saveThemeStatePref(boolean isDark) {
-//
-//                SharedPreferences pref = getApplicationContext().getSharedPreferences("myPref", MODE_PRIVATE);
-//                SharedPreferences.Editor editor = pref.edit();
-//                editor.putBoolean("isDark", isDark);
-//                editor.commit();
-//            }
-//
-//            private boolean getThemeStatePref() {
-//
-//                SharedPreferences pref = getApplicationContext().getSharedPreferences("myPref", MODE_PRIVATE);
-//                boolean isDark = pref.getBoolean("isDark", false);
-//                return isDark;
-//
-//            }
-//        }
+
 

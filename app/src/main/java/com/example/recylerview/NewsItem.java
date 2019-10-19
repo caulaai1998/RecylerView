@@ -1,10 +1,13 @@
 package com.example.recylerview;
 
+import java.sql.Time;
+
 public class NewsItem {
 
 
     String Title,Content,Date;
     int userPhoto;
+
 
     public NewsItem() {
     }
@@ -48,4 +51,5 @@ public class NewsItem {
     public int getUserPhoto() {
         return userPhoto;
     }
+
 }

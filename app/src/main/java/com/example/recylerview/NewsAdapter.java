@@ -123,7 +123,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
     }
 
     public class NewsViewHolder extends RecyclerView.ViewHolder {
-        TextView tv_title,tv_content,tv_date;
+        TextView tv_title,tv_content,tv_date, tv_time;
         ImageView img_user;
         RelativeLayout container;
         public NewsViewHolder(@NonNull View itemView) {
