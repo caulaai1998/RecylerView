@@ -51,6 +51,7 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
         return new NewsViewHolder(layout);
     }
 
+
     @Override
     public void onBindViewHolder(@NonNull NewsViewHolder newsViewHolder, final int position) {
         final NewsItem newsItem = mData.get(position);
@@ -120,6 +121,19 @@ public class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.NewsViewHolder
 
 
 
+    }
+
+    public void removeItem(int position) {
+        mData.remove(position);
+        notifyItemRemoved(position);
+    }
+    public List<NewsItem> getData() {
+        return mData;
+    }
+
+    public void restoreItem(NewsItem item, int position) {
+        mData.add(position, item);
+        notifyItemInserted(position);
     }
 
     public class NewsViewHolder extends RecyclerView.ViewHolder {

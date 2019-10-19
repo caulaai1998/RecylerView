@@ -1,14 +1,18 @@
 package com.example.recylerview;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.service.autofill.UserData;
@@ -30,6 +34,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 
 import org.w3c.dom.Text;
 
@@ -63,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
     Boolean isOpen = false;
     boolean ascending = true;
 
+    private ConstraintLayout constraintLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
 
+        constraintLayout = findViewById(R.id.root_layout);
         fab_main = findViewById(R.id.fab);
         fab1_mail = findViewById(R.id.fab1);
         fab2_share = findViewById(R.id.fab2);
@@ -146,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
         newsAdapter = new NewsAdapter(this, mData, isDark);
         NewsRecyclerview.setAdapter(newsAdapter);
         NewsRecyclerview.setLayoutManager(new LinearLayoutManager(this));
+
 
 
         fab2_share.setOnClickListener(new View.OnClickListener() {
@@ -250,7 +259,11 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        enableSwipeToDeleteAndUndo();
+
+
     }
+
     private void sortData(boolean asc)
     {
         //SORT ARRAY ASCENDING AND DESCENDING
@@ -273,6 +286,40 @@ public class MainActivity extends AppCompatActivity {
         NewsRecyclerview.setAdapter(newsAdapter);
 
     }
+
+    private void enableSwipeToDeleteAndUndo() {
+        SwipeToDeleteCallback swipeToDeleteCallback = new SwipeToDeleteCallback(this) {
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+
+
+                final int position = viewHolder.getAdapterPosition();
+                final NewsItem item = newsAdapter.getData().get(position);
+
+                newsAdapter.removeItem(position);
+
+
+                Snackbar snackbar = Snackbar
+                        .make(constraintLayout, "Item was removed from the list.", Snackbar.LENGTH_LONG);
+                snackbar.setAction("UNDO", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        newsAdapter.restoreItem(item, position);
+                        NewsRecyclerview.scrollToPosition(position);
+                    }
+                });
+
+                snackbar.setActionTextColor(Color.YELLOW);
+                snackbar.show();
+
+            }
+        };
+
+        ItemTouchHelper itemTouchhelper = new ItemTouchHelper(swipeToDeleteCallback);
+        itemTouchhelper.attachToRecyclerView(NewsRecyclerview);
+    }
+
 
     private void InitUpdateDialog(final int position, View view) {
         final TextView txtName = view.findViewById(R.id.et_name);
