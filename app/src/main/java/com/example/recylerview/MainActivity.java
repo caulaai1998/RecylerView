@@ -69,7 +69,9 @@ public class MainActivity extends AppCompatActivity {
     boolean ascending = true;
 
     private ConstraintLayout constraintLayout;
-
+    Date currentTime = Calendar.getInstance().getTime();
+    final SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy '\n' HH:mm");
+    final String formattedDate = df.format(currentTime);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+
         fab1_mail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -135,21 +138,12 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
         rootLayout = findViewById(R.id.root_layout);
         searchInput = findViewById(R.id.search_input);
         NewsRecyclerview = findViewById(R.id.news_rv);
         mData = new ArrayList<>();
 
-        if (isDark) {
-
-            searchInput.setBackgroundResource(R.drawable.search_input_dark_style);
-            rootLayout.setBackgroundColor(getResources().getColor(R.color.black));
-
-        } else {
-            searchInput.setBackgroundResource(R.drawable.search_input_style);
-            rootLayout.setBackgroundColor(getResources().getColor(R.color.white));
-
-        }
 
         newsAdapter = new NewsAdapter(this, mData, isDark);
         NewsRecyclerview.setAdapter(newsAdapter);
@@ -167,16 +161,13 @@ public class MainActivity extends AppCompatActivity {
                 builder.setView(view);
                 dialog = builder.create();
                 dialog.show();
-                final int[] photos = {R.drawable.user,R.drawable.uservoyager};
+                final int[] photos = {R.drawable.user,R.drawable.uservoyager,R.drawable.circul6,R.drawable.useillust};
                 final Random random = new Random();
                 int i = random.nextInt(photos.length);
                 final EditText edtName = view.findViewById(R.id.et_name);
                 final EditText edtContent = view.findViewById(R.id.et_content);
                 Button btnAdd = view.findViewById(R.id.btn_add);
                 Button btnCancel = view.findViewById(R.id.btn_cancel);
-                Date currentTime = Calendar.getInstance().getTime();
-                final SimpleDateFormat df = new SimpleDateFormat("MM-dd-yyyy '\n' HH:mm:ss");
-                final String formattedDate = df.format(currentTime);
                 btnAdd.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
@@ -259,10 +250,15 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+
         enableSwipeToDeleteAndUndo();
 
 
     }
+
+
 
     private void sortData(boolean asc)
     {
@@ -280,6 +276,7 @@ public class MainActivity extends AppCompatActivity {
         {
             Collections.reverse(mData);
         }
+
 
         //ADAPTER
         newsAdapter = new NewsAdapter(this, mData);
@@ -314,6 +311,12 @@ public class MainActivity extends AppCompatActivity {
                 snackbar.show();
 
             }
+            @Override
+            public void onMove(int oldPosition, int newPosition) {
+                newsAdapter.onMove(oldPosition, newPosition);
+            }
+
+
         };
 
         ItemTouchHelper itemTouchhelper = new ItemTouchHelper(swipeToDeleteCallback);
@@ -329,8 +332,6 @@ public class MainActivity extends AppCompatActivity {
         Date currentTime = Calendar.getInstance().getTime();final int[] photos = {R.drawable.user,R.drawable.uservoyager};
         final Random random = new Random();
         int i = random.nextInt(photos.length);
-        final SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
-        final String formattedDate = df.format(currentTime);
         Button btnUpdate = view.findViewById(R.id.btn_add);
         Button btnCancel = view.findViewById(R.id.btn_cancel);
         btnUpdate.setText("Update");
@@ -340,6 +341,13 @@ public class MainActivity extends AppCompatActivity {
                 int k = random.nextInt(photos.length);
                 name = txtName.getText().toString();
                 content = txtContent.getText().toString();
+                if(TextUtils.isEmpty(name)){
+                    txtName.setError("Not null");
+                }
+                if(TextUtils.isEmpty(content)){
+                    txtContent.setError("Not null");
+                }
+                else{
                 NewsItem newsItem = new NewsItem();
                 newsItem.setTitle(name);
                 newsItem.setContent(content);
@@ -347,7 +355,7 @@ public class MainActivity extends AppCompatActivity {
                 newsItem.setUserPhoto(photos[k]);
                 newsAdapter.UpdateItem(position,newsItem);
                 Toast.makeText(MainActivity.this,"Content Updated..",Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
+                dialog.dismiss();}
             }
         });
         btnCancel.setOnClickListener(new View.OnClickListener() {
@@ -358,22 +366,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            View v = getCurrentFocus();
-            if ( v instanceof EditText) {
-                Rect outRect = new Rect();
-                v.getGlobalVisibleRect(outRect);
-                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
-                    v.clearFocus();
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
-            }
-        }
-        return super.dispatchTouchEvent( event );
-    }
+//    @Override
+//    public boolean dispatchTouchEvent(MotionEvent event) {
+//        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//            View v = getCurrentFocus();
+//            if ( v instanceof EditText) {
+//                Rect outRect = new Rect();
+//                v.getGlobalVisibleRect(outRect);
+//                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+//                    v.clearFocus();
+//                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+//                }
+//            }
+//        }
+//        return super.dispatchTouchEvent( event );
+//    }
 }
 
 

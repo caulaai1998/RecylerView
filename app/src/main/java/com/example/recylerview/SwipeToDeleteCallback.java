@@ -12,11 +12,18 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 abstract public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
 
+    private ItemTouchListenner mListenner;
+
+
+    public SwipeToDeleteCallback(ItemTouchListenner mListenner) {
+        this.mListenner = mListenner;
+    }
     Context mContext;
     private Paint mClearPaint;
     private ColorDrawable mBackground;
@@ -29,7 +36,7 @@ abstract public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
     SwipeToDeleteCallback(Context context) {
         mContext = context;
         mBackground = new ColorDrawable();
-        backgroundColor = Color.parseColor("#b80f0a");
+        backgroundColor = Color.parseColor("#ffffff");
         mClearPaint = new Paint();
         mClearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         deleteDrawable = ContextCompat.getDrawable(mContext, R.drawable.icon_delete);
@@ -39,15 +46,34 @@ abstract public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
 
     }
 
-
     @Override
-    public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-        return makeMovementFlags(0, ItemTouchHelper.LEFT);
+    public boolean isLongPressDragEnabled() {
+        return true;
     }
 
     @Override
-    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder viewHolder1) {
-        return false;
+    public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+        // Set movement flags based on the layout manager
+        if (recyclerView.getLayoutManager() instanceof GridLayoutManager) {
+            final int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT;
+            final int swipeFlags = 0;
+            return makeMovementFlags(dragFlags, swipeFlags);
+        } else {
+            final int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
+            final int swipeFlags = ItemTouchHelper.START | ItemTouchHelper.END;
+            return makeMovementFlags(dragFlags, swipeFlags);
+        }
+    }
+
+    @Override
+    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
+        if (source.getItemViewType() != target.getItemViewType()) {
+            return false;
+        }
+
+        // Notify the adapter of the move
+        mListenner.onItemMove(source.getAdapterPosition(), target.getAdapterPosition());
+        return true;
     }
 
     @Override
@@ -93,4 +119,6 @@ abstract public class SwipeToDeleteCallback extends ItemTouchHelper.Callback {
     public float getSwipeThreshold(@NonNull RecyclerView.ViewHolder viewHolder) {
         return 0.7f;
     }
+
+    public abstract void onMove(int oldPosition, int newPosition);
 }
